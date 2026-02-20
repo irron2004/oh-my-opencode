@@ -4,10 +4,12 @@ export const INLINE_CODE_PATTERN = /`[^`]+`/g
 // Re-export from submodules
 export { isPlannerAgent, getUltraworkMessage } from "./ultrawork"
 export { SEARCH_PATTERN, SEARCH_MESSAGE } from "./search"
+export { ULTRA_RESEARCH_PATTERN, ULTRA_RESEARCH_MESSAGE } from "./ultra-research"
 export { ANALYZE_PATTERN, ANALYZE_MESSAGE } from "./analyze"
 
 import { getUltraworkMessage } from "./ultrawork"
 import { SEARCH_PATTERN, SEARCH_MESSAGE } from "./search"
+import { ULTRA_RESEARCH_PATTERN, ULTRA_RESEARCH_MESSAGE } from "./ultra-research"
 import { ANALYZE_PATTERN, ANALYZE_MESSAGE } from "./analyze"
 
 export type KeywordDetector = {
@@ -23,6 +25,10 @@ export const KEYWORD_DETECTORS: KeywordDetector[] = [
   {
     pattern: SEARCH_PATTERN,
     message: SEARCH_MESSAGE,
+  },
+  {
+    pattern: ULTRA_RESEARCH_PATTERN,
+    message: ULTRA_RESEARCH_MESSAGE,
   },
   {
     pattern: ANALYZE_PATTERN,
