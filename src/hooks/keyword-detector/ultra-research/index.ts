@@ -1,0 +1,1 @@
+export { ULTRA_RESEARCH_PATTERN, ULTRA_RESEARCH_MESSAGE } from "./default"

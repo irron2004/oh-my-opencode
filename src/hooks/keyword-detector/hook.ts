@@ -60,9 +60,9 @@ export function createKeywordDetectorHook(ctx: PluginInput, _collector?: Context
       const isNonMainSession = mainSessionID && input.sessionID !== mainSessionID
 
       if (isNonMainSession) {
-        detectedKeywords = detectedKeywords.filter((k) => k.type === "ultrawork")
+        detectedKeywords = detectedKeywords.filter((k) => k.type === "ultrawork" || k.type === "ultra-research")
         if (detectedKeywords.length === 0) {
-          log(`[keyword-detector] Skipping non-ultrawork keywords in non-main session`, {
+          log(`[keyword-detector] Skipping non-ultrawork/non-ultra-research keywords in non-main session`, {
             sessionID: input.sessionID,
             mainSessionID,
           })
@@ -71,6 +71,7 @@ export function createKeywordDetectorHook(ctx: PluginInput, _collector?: Context
       }
 
       const hasUltrawork = detectedKeywords.some((k) => k.type === "ultrawork")
+      const hasUltraResearch = detectedKeywords.some((k) => k.type === "ultra-research")
       if (hasUltrawork) {
         log(`[keyword-detector] Ultrawork mode activated`, { sessionID: input.sessionID })
 
@@ -81,6 +82,30 @@ export function createKeywordDetectorHook(ctx: PluginInput, _collector?: Context
             body: {
               title: "Ultrawork Mode Activated",
               message: "Maximum precision engaged. All agents at your disposal.",
+              variant: "success" as const,
+              duration: 3000,
+            },
+          })
+          .catch((err) =>
+            log(`[keyword-detector] Failed to show toast`, {
+              error: err,
+              sessionID: input.sessionID,
+            })
+          )
+      }
+
+      if (hasUltraResearch) {
+        log(`[keyword-detector] Ultra research mode activated`, { sessionID: input.sessionID })
+
+        if (output.message.variant === undefined) {
+          output.message.variant = "max"
+        }
+
+        ctx.client.tui
+          .showToast({
+            body: {
+              title: "Ultra Research Mode Activated",
+              message: "Research orchestration engaged. Diverge, audit evidence, and converge.",
               variant: "success" as const,
               duration: 3000,
             },

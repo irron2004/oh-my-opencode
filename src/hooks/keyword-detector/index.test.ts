@@ -24,11 +24,14 @@ describe("keyword-detector message transform", () => {
     _resetForTesting()
   })
 
-  function createMockPluginInput() {
+  function createMockPluginInput(options: { toastCalls?: string[] } = {}) {
+    const toastCalls = options.toastCalls ?? []
     return {
       client: {
         tui: {
-          showToast: async () => {},
+          showToast: async (opts: any) => {
+            toastCalls.push(opts.body.title)
+          },
         },
       },
     } as any
@@ -75,6 +78,28 @@ describe("keyword-detector message transform", () => {
     expect(textPart!.text).toContain("---")
     expect(textPart!.text).toContain("for the bug")
     expect(textPart!.text).toContain("[search-mode]")
+  })
+
+  test("should prepend ultra research message to text part", async () => {
+    const collector = new ContextCollector()
+    const sessionID = "ulr-test-session"
+    getMainSessionSpy = spyOn(sessionState, "getMainSessionID").mockReturnValue(sessionID)
+    const toastCalls: string[] = []
+    const hook = createKeywordDetectorHook(createMockPluginInput({ toastCalls }), collector)
+    const output = {
+      message: {} as Record<string, unknown>,
+      parts: [{ type: "text", text: "ulr investigate model drift" }],
+    }
+
+    await hook["chat.message"]({ sessionID }, output)
+
+    const textPart = output.parts.find(p => p.type === "text")
+    expect(textPart).toBeDefined()
+    expect(textPart!.text).toContain("---")
+    expect(textPart!.text).toContain("[ultra-research-mode]")
+    expect(textPart!.text).toContain("investigate model drift")
+    expect(output.message.variant).toBe("max")
+    expect(toastCalls).toContain("Ultra Research Mode Activated")
   })
 
   test("should NOT transform when no keywords detected", async () => {
@@ -146,7 +171,7 @@ describe("keyword-detector session filtering", () => {
     )
 
     // then - search keyword should be filtered out based on mainSessionID comparison
-    const skipLog = logCalls.find(c => c.msg.includes("Skipping non-ultrawork keywords in non-main session"))
+    const skipLog = logCalls.find(c => c.msg.includes("Skipping non-ultrawork/non-ultra-research keywords in non-main session"))
     expect(skipLog).toBeDefined()
   })
 
@@ -172,6 +197,27 @@ describe("keyword-detector session filtering", () => {
     // then - ultrawork should still work (variant set to max)
     expect(output.message.variant).toBe("max")
     expect(toastCalls).toContain("Ultrawork Mode Activated")
+  })
+
+  test("should allow ultra-research keywords in non-main session", async () => {
+    const mainSessionID = "main-123"
+    const subagentSessionID = "subagent-456"
+    setMainSession(mainSessionID)
+
+    const toastCalls: string[] = []
+    const hook = createKeywordDetectorHook(createMockPluginInput({ toastCalls }))
+    const output = {
+      message: {} as Record<string, unknown>,
+      parts: [{ type: "text", text: "ulr design experiment protocol" }],
+    }
+
+    await hook["chat.message"](
+      { sessionID: subagentSessionID },
+      output
+    )
+
+    expect(output.message.variant).toBe("max")
+    expect(toastCalls).toContain("Ultra Research Mode Activated")
   })
 
   test("should allow all keywords in main session", async () => {
@@ -336,6 +382,44 @@ describe("keyword-detector word boundary", () => {
     // then - ultrawork should NOT be triggered
     expect(output.message.variant).toBeUndefined()
     expect(toastCalls).not.toContain("Ultrawork Mode Activated")
+  })
+
+  test("should trigger ultra research on standalone 'ulr' keyword", async () => {
+    setMainSession(undefined)
+
+    const hook = createKeywordDetectorHook(createMockPluginInput())
+    const output = {
+      message: {} as Record<string, unknown>,
+      parts: [{ type: "text", text: "ulr run deeper analysis" }],
+    }
+
+    await hook["chat.message"](
+      { sessionID: "any-session" },
+      output
+    )
+
+    const textPart = output.parts.find(p => p.type === "text")
+    expect(textPart).toBeDefined()
+    expect(textPart!.text).toContain("[ultra-research-mode]")
+  })
+
+  test("should NOT trigger ultra research on partial matches containing 'ulr'", async () => {
+    setMainSession(undefined)
+
+    const hook = createKeywordDetectorHook(createMockPluginInput())
+    const output = {
+      message: {} as Record<string, unknown>,
+      parts: [{ type: "text", text: "this is ultraresearching phase" }],
+    }
+
+    await hook["chat.message"](
+      { sessionID: "any-session" },
+      output
+    )
+
+    const textPart = output.parts.find(p => p.type === "text")
+    expect(textPart).toBeDefined()
+    expect(textPart!.text).toBe("this is ultraresearching phase")
   })
 })
 
