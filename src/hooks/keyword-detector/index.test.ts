@@ -830,3 +830,20 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
     expect(textPart!.text).not.toContain("YOU ARE A PLANNER, NOT AN IMPLEMENTER")
   })
 })
+
+test("ultra-research message includes /ulr hint and guardrail", async () => {
+  const collector = new ContextCollector()
+  const sessionID = "ulr-hint-test-session"
+  // local mock input since this test is outside the previous describe/scope
+  const mockInput = { client: { tui: { showToast: async () => {} } } } as any
+  const hook = createKeywordDetectorHook(mockInput, collector)
+  const output = {
+    message: {} as Record<string, unknown>,
+    parts: [{ type: "text", text: "ulr topic drift" }],
+  }
+  await hook["chat.message"]({ sessionID }, output)
+  const textPart = output.parts.find(p => p.type === "text")
+  expect(textPart).toBeDefined()
+  expect(textPart!.text).toContain("/ulr \"<topic>\"")
+  expect(textPart!.text).toContain("Guardrail: keyword mode is instruction-only and must not create/update files.")
+})

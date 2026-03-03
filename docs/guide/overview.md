@@ -33,6 +33,10 @@ That's it. The agent figures everything out — explores your codebase, research
 
 Want more control? Press **Tab** to enter [Prometheus mode](./orchestration.md) for interview-based planning, then run `/start-work` for full orchestration.
 
+**Need topic research?** Use **`/ulr "topic"`** for a document-first Ultra-Research workflow, or include **`ulr`** in your prompt to trigger the ultra-research keyword hint.
+
+**Current scope note:** ULR currently supports Phase 1+2 workflow only (no Phase 3 auto-advance/state-machine yet).
+
 ---
 
 ## The Philosophy: Breaking Free

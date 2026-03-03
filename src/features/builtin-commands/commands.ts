@@ -1,6 +1,7 @@
 import type { CommandDefinition } from "../claude-code-command-loader"
 import type { BuiltinCommandName, BuiltinCommands } from "./types"
 import { INIT_DEEP_TEMPLATE } from "./templates/init-deep"
+import { ULR_TEMPLATE } from "./templates/ulr"
 import { RALPH_LOOP_TEMPLATE, CANCEL_RALPH_TEMPLATE } from "./templates/ralph-loop"
 import { STOP_CONTINUATION_TEMPLATE } from "./templates/stop-continuation"
 import { REFACTOR_TEMPLATE } from "./templates/refactor"
@@ -71,6 +72,14 @@ Timestamp: $TIMESTAMP
 $ARGUMENTS
 </user-request>`,
     argumentHint: "[plan-name]",
+  },
+  ulr: {
+    description: "(builtin) Ultra-Research: explore a topic and gather information",
+    argumentHint: "\"topic\"",
+    agent: "sisyphus",
+    template: `<command-instruction>
+${ULR_TEMPLATE}
+</command-instruction>`,
   },
   "stop-continuation": {
     description: "(builtin) Stop all continuation mechanisms (ralph loop, todo continuation, boulder) for this session",

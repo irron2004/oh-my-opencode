@@ -252,6 +252,32 @@ describe("createAutoSlashCommandHook", () => {
       // then should not modify (command not found = feature inactive)
       expect(output.parts[0].text).toBe(originalText)
     })
+    //#given
+    it("should expand /ulr command into template", async () => {
+      //#given
+      const hook = createAutoSlashCommandHook()
+      const sessionID = `test-session-ulr-${Date.now()}`
+      const input = createMockInput(sessionID)
+      const output = createMockOutput("/ulr my topic")
+      //#when
+      await hook["chat.message"](input, output)
+      //#then
+      expect(output.parts[0].text).toContain("<auto-slash-command>")
+      expect(output.parts[0].text).toContain("/ulr Command")
+    })
+    //#given
+    it("should NOT expand /ulr inside a fenced code block", async () => {
+      //#given
+      const hook = createAutoSlashCommandHook()
+      const sessionID = `test-session-ulr-codeblock-${Date.now()}`
+      const input = createMockInput(sessionID)
+      const output = createMockOutput("```\n/ulr my topic\n```")
+      const originalText = output.parts[0].text
+      //#when
+      await hook["chat.message"](input, output)
+      //#then
+      expect(output.parts[0].text).toBe(originalText)
+    })
   })
 
   describe("command.execute.before hook", () => {

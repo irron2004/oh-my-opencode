@@ -2,6 +2,9 @@ export const ULTRA_RESEARCH_PATTERN = /\b(ultra[\s-]?research|ulr)\b/i
 
 export const ULTRA_RESEARCH_MESSAGE = `[ultra-research-mode]
 
+Hint: Use /ulr "<topic>" to run the full document-first Ultra-Research workflow.
+Guardrail: keyword mode is instruction-only and must not create/update files.
+
 MANDATORY: You MUST say "ULTRA-RESEARCH MODE ENABLED!" as your first response when this mode activates.
 
 Operate as a research orchestrator. Use a round-based research process and make documentation the primary output.

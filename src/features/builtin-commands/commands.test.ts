@@ -1,6 +1,7 @@
 import { describe, test, expect } from "bun:test"
 import { loadBuiltinCommands } from "./commands"
 import { HANDOFF_TEMPLATE } from "./templates/handoff"
+import { ULR_TEMPLATE } from "./templates/ulr"
 import type { BuiltinCommandName } from "./types"
 
 describe("loadBuiltinCommands", () => {
@@ -25,6 +26,40 @@ describe("loadBuiltinCommands", () => {
 
     //#then
     expect(commands.handoff).toBeUndefined()
+  })
+
+  test("should include ulr command in loaded commands", () => {
+    //#given
+    const disabledCommands: BuiltinCommandName[] = []
+
+    //#when
+    const commands = loadBuiltinCommands(disabledCommands)
+
+    //#then
+    expect(commands.ulr).toBeDefined()
+    expect(commands.ulr.name).toBe("ulr")
+  })
+
+  test("should exclude ulr when disabled", () => {
+    //#given
+    const disabledCommands: BuiltinCommandName[] = ["ulr"]
+
+    //#when
+    const commands = loadBuiltinCommands(disabledCommands)
+
+    //#then
+    expect(commands.ulr).toBeUndefined()
+  })
+
+  test("should have Ultra-Research wording in ulr description", () => {
+    //#given
+    const disabledCommands: BuiltinCommandName[] = []
+
+    //#when
+    const commands = loadBuiltinCommands(disabledCommands)
+
+    //#then
+    expect(commands.ulr.description).toContain("Ultra-Research")
   })
 
   test("should include handoff template content in command template", () => {

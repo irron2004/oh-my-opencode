@@ -144,6 +144,49 @@ describe("disabled_mcps schema", () => {
     }
   })
 })
+describe("disabled_commands schema", () => {
+  test("accepts built-in command names", () => {
+    // given
+    const config = {
+      disabled_commands: ["ulr", "handoff"],
+    }
+
+    // when
+    const result = OhMyOpenCodeConfigSchema.safeParse(config)
+
+    // then
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.disabled_commands).toEqual(["ulr", "handoff"])
+    }
+  })
+
+  test("rejects non-string values", () => {
+    // given
+    const config = {
+      disabled_commands: [123, true, null],
+    }
+
+    // when
+    const result = OhMyOpenCodeConfigSchema.safeParse(config)
+
+    // then
+    expect(result.success).toBe(false)
+  })
+
+  test("rejects invalid command names", () => {
+    // given
+    const config = {
+      disabled_commands: ["not-a-command"],
+    }
+
+    // when
+    const result = OhMyOpenCodeConfigSchema.safeParse(config)
+
+    // then
+    expect(result.success).toBe(false)
+  })
+})
 
 describe("AgentOverrideConfigSchema", () => {
   describe("category field", () => {
