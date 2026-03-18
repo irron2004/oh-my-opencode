@@ -171,3 +171,35 @@ describe("HANDOFF_TEMPLATE", () => {
     expect(emojiRegex.test(HANDOFF_TEMPLATE)).toBe(false)
   })
 })
+
+describe("ULR_TEMPLATE", () => {
+  test("should require topic input and define topicSlug normalization", () => {
+    //#given - the template string
+
+    //#when / #then
+    expect(ULR_TEMPLATE).toContain("Topic input: $ARGUMENTS")
+    expect(ULR_TEMPLATE).toContain("topicSlug = filesystem-safe directory name")
+    expect(ULR_TEMPLATE).toContain(".sisyphus/ulr/<topicSlug>/brief.md")
+    expect(ULR_TEMPLATE).toContain("ask for the topic and STOP")
+  })
+
+  test("should include phase 3 defer guardrails", () => {
+    //#given - the template string
+
+    //#when / #then
+    expect(ULR_TEMPLATE).toContain("Phase 1+2 manual workflow (Phase 3 state-machine automation is deferred)")
+    expect(ULR_TEMPLATE).toContain("do not implement ulr.state.json automation")
+  })
+
+  test("should include round flow, evidence tags, and decision forcing", () => {
+    //#given - the template string
+
+    //#when / #then
+    expect(ULR_TEMPLATE).toContain("Round 0")
+    expect(ULR_TEMPLATE).toContain("Round 1")
+    expect(ULR_TEMPLATE).toContain("Round 2")
+    expect(ULR_TEMPLATE).toContain("Round 3")
+    expect(ULR_TEMPLATE).toContain("KEEP / HOLD / KILL")
+    expect(ULR_TEMPLATE).toContain("[evidence: experiment]")
+  })
+})

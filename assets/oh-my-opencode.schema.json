@@ -57,7 +57,9 @@
           "cancel-ralph",
           "refactor",
           "start-work",
-          "stop-continuation"
+          "stop-continuation",
+          "ulr",
+          "handoff"
         ]
       }
     },

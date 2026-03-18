@@ -1,22 +1,31 @@
 export const ULR_TEMPLATE = `# /ulr (Ultra Research)
 
-Topic: {topic}
+Topic input: $ARGUMENTS
 Mode: Phase 1+2 manual workflow (Phase 3 state-machine automation is deferred)
 
+Input normalization (must do first)
+- topic = user-facing topic string from $ARGUMENTS (trimmed; preserve original wording in docs).
+- If topic is missing/empty: ask for the topic and STOP. Do not continue.
+- topicSlug = filesystem-safe directory name derived from topic:
+  - lowercase
+  - convert spaces/underscores to hyphens
+  - remove path separators and invalid path characters (/ \\ : * ? " < > |)
+  - collapse repeated hyphens and trim leading/trailing hyphens
+  - if empty after sanitizing, use "research-topic"
+
 Non-negotiable guardrails
-- If Topic is missing/empty: ask for the topic and STOP. Do not continue.
 - Document-first: a round does not "complete" unless files are updated.
 - Append-only updates: if a file already exists, APPEND the new round section; never wipe/overwrite prior rounds.
 - Evidence-tag every claim with one of: [evidence: experiment], [evidence: literature], [evidence: codebase], [evidence: reasoning]
 - Decision-forcing: every round must explicitly label each candidate as KEEP, HOLD, or KILL (no silent drops).
 - Phase 3 explicitly out of scope: do not implement ulr.state.json automation, auto-advance, session.idle loops, or background completion state machines.
 
-Artifacts (create under .sisyphus/ulr/{topic}/)
-1) .sisyphus/ulr/{topic}/brief.md
-2) .sisyphus/ulr/{topic}/research_log.md
-3) .sisyphus/ulr/{topic}/hypotheses.md
-4) .sisyphus/ulr/{topic}/experiment_plan.md
-5) .sisyphus/ulr/{topic}/decision_log.md
+Artifacts (create under .sisyphus/ulr/<topicSlug>/)
+1) .sisyphus/ulr/<topicSlug>/brief.md
+2) .sisyphus/ulr/<topicSlug>/research_log.md
+3) .sisyphus/ulr/<topicSlug>/hypotheses.md
+4) .sisyphus/ulr/<topicSlug>/experiment_plan.md
+5) .sisyphus/ulr/<topicSlug>/decision_log.md
 
 Artifact responsibilities
 - brief.md: single source of truth for problem, success criteria, constraints, and available assets.
