@@ -25,11 +25,13 @@
     "build:all": "bun run build && bun run build:binaries",
     "build:binaries": "bun run script/build-binaries.ts",
     "build:schema": "bun run script/build-schema.ts",
+    "check": "bun run test:ci && bun run typecheck && bun run build",
     "clean": "rm -rf dist",
     "postinstall": "node postinstall.mjs",
     "prepublishOnly": "bun run clean && bun run build",
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "test:ci": "bun run script/test-ci.ts"
   },
   "keywords": [
     "opencode",

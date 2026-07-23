@@ -1,5 +1,5 @@
 import { existsSync, statSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { PROJECT_MARKERS } from "./constants";
 
 /**
@@ -7,10 +7,15 @@ import { PROJECT_MARKERS } from "./constants";
  * Checks for PROJECT_MARKERS (.git, pyproject.toml, package.json, etc.)
  *
  * @param startPath - Starting path to search from (file or directory)
+ * @param stopAt - Optional highest directory to inspect before stopping
  * @returns Project root path or null if not found
  */
-export function findProjectRoot(startPath: string): string | null {
+export function findProjectRoot(
+  startPath: string,
+  stopAt?: string
+): string | null {
   let current: string;
+  const resolvedStop = stopAt ? resolve(stopAt) : undefined;
 
   try {
     const stat = statSync(startPath);
@@ -25,6 +30,10 @@ export function findProjectRoot(startPath: string): string | null {
       if (existsSync(markerPath)) {
         return current;
       }
+    }
+
+    if (resolvedStop && resolve(current) === resolvedStop) {
+      return null;
     }
 
     const parent = dirname(current);
