@@ -122,15 +122,17 @@ change. Run the smallest relevant test during development, then typecheck and bu
 
 ```bash
 bun test path/to/changed.test.ts
+bun run check
 bun run typecheck
 bun run build
 ```
 
-`bun test` is a useful broad local sweep, but it is not CI parity. Some mock-heavy
-suites are intentionally split into separate Bun processes in CI. For full coverage,
-reproduce the current `test` job in `.github/workflows/ci.yml`. If a combined local
-run fails only through module-cache contamination, run the failing file in isolation
-and report both results; do not hide a product failure behind that distinction.
+`bun run check` is the canonical local gate: it uses the same process-isolated test
+runner as CI, then typechecks and builds. `bun test` is a useful broad sweep, but it
+is not CI parity because some mock-heavy suites must run in separate Bun processes.
+If a combined local run fails only through module-cache contamination, run the
+failing file in isolation and report both results; do not hide a product failure
+behind that distinction.
 
 `bun run build` writes ignored `dist/` output and regenerates
 `assets/oh-my-opencode.schema.json`. Schema changes must include the intentional

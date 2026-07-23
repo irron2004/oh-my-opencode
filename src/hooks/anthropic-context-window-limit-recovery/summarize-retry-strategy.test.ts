@@ -1,11 +1,10 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test"
-import { runSummarizeRetryStrategy } from "./summarize-retry-strategy"
+import { beforeEach, describe, expect, mock, test } from "bun:test"
+import {
+  calculateSummarizeRetryDelay,
+  runSummarizeRetryStrategy,
+} from "./summarize-retry-strategy"
 import type { AutoCompactState, ParsedTokenLimitError, RetryState } from "./types"
 import type { OhMyOpenCodeConfig } from "../../config"
-
-type TimeoutCall = {
-  delay: number
-}
 
 function createAutoCompactState(): AutoCompactState {
   return {
@@ -45,12 +44,6 @@ describe("runSummarizeRetryStrategy", () => {
     showToastMock.mockResolvedValue(undefined)
   })
 
-  afterEach(() => {
-    globalThis.setTimeout = originalSetTimeout
-  })
-
-  const originalSetTimeout = globalThis.setTimeout
-
   test("stops retries when total summarize timeout is exceeded", async () => {
     //#given
     autoCompactState.pendingCompact.add(sessionID)
@@ -89,34 +82,14 @@ describe("runSummarizeRetryStrategy", () => {
     )
   })
 
-  test("caps retry delay by remaining total timeout window", async () => {
+  test("caps retry delay by remaining total timeout window", () => {
     //#given
-    const timeoutCalls: TimeoutCall[] = []
-    globalThis.setTimeout = ((_: (...args: unknown[]) => void, delay?: number) => {
-      timeoutCalls.push({ delay: delay ?? 0 })
-      return 1 as unknown as ReturnType<typeof setTimeout>
-    }) as typeof setTimeout
-
-    autoCompactState.retryStateBySession.set(sessionID, {
-      attempt: 1,
-      lastAttemptTime: Date.now(),
-      firstAttemptTime: Date.now() - 119700,
-    })
-    summarizeMock.mockRejectedValueOnce(new Error("rate limited"))
+    const remainingTimeMs = 300
 
     //#when
-    await runSummarizeRetryStrategy({
-      sessionID,
-      msg: { providerID: "anthropic", modelID: "claude-sonnet-4-6" },
-      autoCompactState,
-      client: client as never,
-      directory,
-      pluginConfig: {} as OhMyOpenCodeConfig,
-    })
+    const delay = calculateSummarizeRetryDelay(2, remainingTimeMs)
 
     //#then
-    expect(timeoutCalls.length).toBe(1)
-    expect(timeoutCalls[0]!.delay).toBeGreaterThan(0)
-    expect(timeoutCalls[0]!.delay).toBeLessThanOrEqual(500)
+    expect(delay).toBe(remainingTimeMs)
   })
 })

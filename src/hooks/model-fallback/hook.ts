@@ -22,6 +22,14 @@ type FallbackCallback = (input: {
   variant?: string
 }) => void | Promise<void>
 
+type ConnectedProvidersReader = () => string[] | null
+
+type ModelFallbackHookOptions = {
+  toast?: FallbackToast
+  onApplied?: FallbackCallback
+  readConnectedProviders?: ConnectedProvidersReader
+}
+
 export type ModelFallbackState = {
   providerID: string
   modelID: string
@@ -109,6 +117,7 @@ export function setPendingModelFallback(
  */
 export function getNextFallback(
   sessionID: string,
+  readConnectedProviders: ConnectedProvidersReader = readFallbackConnectedProviders,
 ): { providerID: string; modelID: string; variant?: string } | null {
   const state = pendingModelFallbacks.get(sessionID)
   if (!state) return null
@@ -117,8 +126,7 @@ export function getNextFallback(
 
   const { fallbackChain } = state
 
-  const providerModelsCache = readProviderModelsCache()
-  const connectedProviders = providerModelsCache?.connected ?? readConnectedProvidersCache()
+  const connectedProviders = readConnectedProviders()
   const connectedSet = connectedProviders ? new Set(connectedProviders) : null
 
   const isReachable = (entry: FallbackEntry): boolean => {
@@ -139,7 +147,11 @@ export function getNextFallback(
       continue
     }
 
-    const providerID = selectFallbackProvider(fallback.providers, state.providerID)
+    const providerID = selectFallbackProvider(
+      fallback.providers,
+      state.providerID,
+      connectedProviders,
+    )
     state.pending = false
 
     log("[model-fallback] Using fallback for session: " + sessionID + ", attempt: " + attemptCount + ", model: " + fallback.model)
@@ -154,6 +166,11 @@ export function getNextFallback(
   log("[model-fallback] No more fallbacks for session: " + sessionID)
   pendingModelFallbacks.delete(sessionID)
   return null
+}
+
+function readFallbackConnectedProviders(): string[] | null {
+  const providerModelsCache = readProviderModelsCache()
+  return providerModelsCache?.connected ?? readConnectedProvidersCache()
 }
 
 /**
@@ -183,9 +200,10 @@ export function getFallbackState(sessionID: string): ModelFallbackState | undefi
 /**
  * Creates a chat.message hook that applies model fallbacks when pending.
  */
-export function createModelFallbackHook(args?: { toast?: FallbackToast; onApplied?: FallbackCallback }) {
+export function createModelFallbackHook(args?: ModelFallbackHookOptions) {
   const toast = args?.toast
   const onApplied = args?.onApplied
+  const readConnectedProviders = args?.readConnectedProviders
 
   return {
     "chat.message": async (
@@ -195,7 +213,7 @@ export function createModelFallbackHook(args?: { toast?: FallbackToast; onApplie
       const { sessionID } = input
       if (!sessionID) return
 
-      const fallback = getNextFallback(sessionID)
+      const fallback = getNextFallback(sessionID, readConnectedProviders)
       if (!fallback) return
 
       output.message["model"] = {

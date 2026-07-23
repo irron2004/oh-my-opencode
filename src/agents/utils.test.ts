@@ -166,19 +166,40 @@ describe("createBuiltinAgents with model overrides", () => {
     }
   })
 
-   test("Oracle uses connected provider fallback when availableModels is empty and cache exists", async () => {
-     // #given - connected providers cache has "openai", which matches oracle's first fallback entry
-     const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(["openai"])
+  test("Oracle uses connected provider fallback when availableModels is empty and cache exists", async () => {
+    // #given - isolate both cache generations from the developer's real OpenCode cache
+    const connectedCacheSpy = spyOn(
+      connectedProvidersCache,
+      "readConnectedProvidersCache"
+    ).mockReturnValue(["openai"])
+    const providerModelsSpy = spyOn(
+      connectedProvidersCache,
+      "readProviderModelsCache"
+    ).mockReturnValue(null)
 
-     // #when
-     const agents = await createBuiltinAgents([], {}, undefined, TEST_DEFAULT_MODEL, undefined, undefined, [], undefined, undefined)
+    try {
+      // #when
+      const agents = await createBuiltinAgents(
+        [],
+        {},
+        undefined,
+        TEST_DEFAULT_MODEL,
+        undefined,
+        undefined,
+        [],
+        undefined,
+        undefined
+      )
 
-     // #then - oracle resolves via connected cache fallback to openai/gpt-5.2 (not system default)
-     expect(agents.oracle.model).toBe("openai/gpt-5.2")
-     expect(agents.oracle.reasoningEffort).toBe("medium")
-     expect(agents.oracle.thinking).toBeUndefined()
-     cacheSpy.mockRestore?.()
-   })
+      // #then - oracle resolves via connected cache fallback to openai/gpt-5.2 (not system default)
+      expect(agents.oracle.model).toBe("openai/gpt-5.2")
+      expect(agents.oracle.reasoningEffort).toBe("medium")
+      expect(agents.oracle.thinking).toBeUndefined()
+    } finally {
+      connectedCacheSpy.mockRestore()
+      providerModelsSpy.mockRestore()
+    }
+  })
 
    test("Oracle created without model field when no cache exists (first run scenario)", async () => {
      // #given - no cache at all (first run)
@@ -470,18 +491,29 @@ describe("createBuiltinAgents with model overrides", () => {
 })
 
 describe("createBuiltinAgents without systemDefaultModel", () => {
-   test("agents created via connected cache fallback even without systemDefaultModel", async () => {
-     // #given - connected cache has "openai", which matches oracle's fallback chain
-     const cacheSpy = spyOn(connectedProvidersCache, "readConnectedProvidersCache").mockReturnValue(["openai"])
+  test("agents created via connected cache fallback even without systemDefaultModel", async () => {
+    // #given - isolate both cache generations from the developer's real OpenCode cache
+    const connectedCacheSpy = spyOn(
+      connectedProvidersCache,
+      "readConnectedProvidersCache"
+    ).mockReturnValue(["openai"])
+    const providerModelsSpy = spyOn(
+      connectedProvidersCache,
+      "readProviderModelsCache"
+    ).mockReturnValue(null)
 
-     // #when
-     const agents = await createBuiltinAgents([], {}, undefined, undefined)
+    try {
+      // #when
+      const agents = await createBuiltinAgents([], {}, undefined, undefined)
 
-     // #then - connected cache enables model resolution despite no systemDefaultModel
-     expect(agents.oracle).toBeDefined()
-     expect(agents.oracle.model).toBe("openai/gpt-5.2")
-     cacheSpy.mockRestore?.()
-   })
+      // #then - connected cache enables model resolution despite no systemDefaultModel
+      expect(agents.oracle).toBeDefined()
+      expect(agents.oracle.model).toBe("openai/gpt-5.2")
+    } finally {
+      connectedCacheSpy.mockRestore()
+      providerModelsSpy.mockRestore()
+    }
+  })
 
    test("agents NOT created when no cache and no systemDefaultModel (first run without defaults)", async () => {
      // #given

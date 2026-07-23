@@ -9,6 +9,17 @@ import { fixEmptyMessages } from "./empty-content-recovery"
 import { resolveCompactionModel } from "../shared/compaction-model-resolver"
 
 const SUMMARIZE_RETRY_TOTAL_TIMEOUT_MS = 120_000
+
+export function calculateSummarizeRetryDelay(
+  attempt: number,
+  remainingTimeMs: number
+): number {
+  const delay =
+    RETRY_CONFIG.initialDelayMs *
+    Math.pow(RETRY_CONFIG.backoffFactor, attempt - 1)
+  return Math.min(delay, RETRY_CONFIG.maxDelayMs, remainingTimeMs)
+}
+
 export async function runSummarizeRetryStrategy(params: {
   sessionID: string
   msg: Record<string, unknown>
@@ -132,10 +143,10 @@ export async function runSummarizeRetryStrategy(params: {
           return
         }
 
-        const delay =
-          RETRY_CONFIG.initialDelayMs *
-          Math.pow(RETRY_CONFIG.backoffFactor, retryState.attempt - 1)
-        const cappedDelay = Math.min(delay, RETRY_CONFIG.maxDelayMs, remainingTimeMs)
+        const cappedDelay = calculateSummarizeRetryDelay(
+          retryState.attempt,
+          remainingTimeMs
+        )
 
         setTimeout(() => {
           void runSummarizeRetryStrategy(params)

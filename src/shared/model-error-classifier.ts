@@ -116,12 +116,19 @@ export function hasMoreFallbacks(
  * Priority:
  * 1) First connected provider in the entry's provider preference order
  * 2) First provider listed in the fallback entry (when cache is missing)
+ *
+ * A caller can pass a connected-provider snapshot to keep reachability and
+ * selection decisions consistent within one fallback attempt.
  */
 export function selectFallbackProvider(
   providers: string[],
   preferredProviderID?: string,
+  connectedProvidersOverride?: string[] | null,
 ): string {
-  const connectedProviders = readConnectedProvidersCache()
+  const connectedProviders =
+    connectedProvidersOverride === undefined
+      ? readConnectedProvidersCache()
+      : connectedProvidersOverride
   if (connectedProviders) {
     const connectedSet = new Set(connectedProviders.map(p => p.toLowerCase()))
     for (const provider of providers) {

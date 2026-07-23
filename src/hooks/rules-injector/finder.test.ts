@@ -373,7 +373,7 @@ describe("findProjectRoot", () => {
     writeFileSync(file, "content");
 
     // when finding project root
-    const root = findProjectRoot(file);
+    const root = findProjectRoot(file, TEST_DIR);
 
     // then should return null
     expect(root).toBeNull();

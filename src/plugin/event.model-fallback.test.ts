@@ -6,6 +6,9 @@ import { _resetForTesting, setMainSession } from "../features/claude-code-sessio
 import { createModelFallbackHook, clearPendingModelFallback } from "../hooks/model-fallback/hook"
 
 describe("createEventHandler - model fallback", () => {
+  const createDeterministicModelFallbackHook = () =>
+    createModelFallbackHook({ readConnectedProviders: () => null })
+
   const createHandler = (args?: { hooks?: any }) => {
     const abortCalls: string[] = []
     const promptCalls: string[] = []
@@ -53,7 +56,7 @@ describe("createEventHandler - model fallback", () => {
   test("triggers retry prompt for assistant message.updated APIError payloads (headless resume)", async () => {
     //#given
     const sessionID = "ses_message_updated_fallback"
-    const modelFallback = createModelFallbackHook()
+    const modelFallback = createDeterministicModelFallbackHook()
     const { handler, abortCalls, promptCalls } = createHandler({ hooks: { modelFallback } })
 
     //#when
@@ -96,7 +99,7 @@ describe("createEventHandler - model fallback", () => {
     //#given
     const sessionID = "ses_main_fallback_nested"
     setMainSession(sessionID)
-    const modelFallback = createModelFallbackHook()
+    const modelFallback = createDeterministicModelFallbackHook()
     const { handler, abortCalls, promptCalls } = createHandler({ hooks: { modelFallback } })
 
     //#when
@@ -129,7 +132,7 @@ describe("createEventHandler - model fallback", () => {
     setMainSession(sessionID)
     clearPendingModelFallback(sessionID)
 
-    const modelFallback = createModelFallbackHook()
+    const modelFallback = createDeterministicModelFallbackHook()
 
     const { handler, abortCalls, promptCalls } = createHandler({ hooks: { modelFallback } })
 
@@ -222,7 +225,7 @@ describe("createEventHandler - model fallback", () => {
     setMainSession(sessionID)
     clearPendingModelFallback(sessionID)
 
-    const modelFallback = createModelFallbackHook()
+    const modelFallback = createDeterministicModelFallbackHook()
 
     const eventHandler = createEventHandler({
       ctx: {
