@@ -1,12 +1,12 @@
 export const INIT_DEEP_TEMPLATE = `# /init-deep
 
-Generate hierarchical AGENTS.md files. Root + complexity-scored subdirectories.
+Generate hierarchical AGENTS.md files with sibling CLAUDE.md bridges. Root + complexity-scored subdirectories.
 
 ## Usage
 
 \`\`\`
-/init-deep                      # Update mode: modify existing + create new where warranted
-/init-deep --create-new         # Read existing → remove all → regenerate from scratch
+/init-deep                      # Update mode: modify existing rule pairs + create new where warranted
+/init-deep --create-new         # Read existing → remove all → regenerate rule pairs from scratch
 /init-deep --max-depth=2        # Limit directory depth (default: 3)
 \`\`\`
 
@@ -16,10 +16,10 @@ Generate hierarchical AGENTS.md files. Root + complexity-scored subdirectories.
 
 1. **Discovery + Analysis** (concurrent)
    - Fire background explore agents immediately
-   - Main session: bash structure + LSP codemap + read existing AGENTS.md
-2. **Score & Decide** - Determine AGENTS.md locations from merged findings
-3. **Generate** - Root first, then subdirs in parallel
-4. **Review** - Deduplicate, trim, validate
+   - Main session: bash structure + LSP codemap + read existing rule files
+2. **Score & Decide** - Determine scoped rule locations from merged findings
+3. **Generate** - Root pair first, then subdirectory pairs in parallel
+4. **Review** - Deduplicate, trim, validate bridge parity
 
 <critical>
 **TodoWrite ALL phases. Mark in_progress → completed in real-time.**
@@ -27,7 +27,7 @@ Generate hierarchical AGENTS.md files. Root + complexity-scored subdirectories.
 TodoWrite([
   { id: "discovery", content: "Fire explore agents + LSP codemap + read existing", status: "pending", priority: "high" },
   { id: "scoring", content: "Score directories, determine locations", status: "pending", priority: "high" },
-  { id: "generate", content: "Generate AGENTS.md files (root + subdirs)", status: "pending", priority: "high" },
+  { id: "generate", content: "Generate AGENTS.md + CLAUDE.md pairs (root + subdirs)", status: "pending", priority: "high" },
   { id: "review", content: "Deduplicate, validate, trim", status: "pending", priority: "medium" }
 ])
 \`\`\`
@@ -102,7 +102,7 @@ find . -type f \\( -name "*.py" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js"
 find . -type f \\( -name "AGENTS.md" -o -name "CLAUDE.md" \\) -not -path '*/node_modules/*' 2>/dev/null
 \`\`\`
 
-#### 2. Read Existing AGENTS.md
+#### 2. Read Existing Rule Files
 \`\`\`
 For each existing file found:
   Read(filePath=file)
@@ -164,7 +164,7 @@ for each task_id: background_output(task_id="...")
 | Score | Action |
 |-------|--------|
 | **Root (.)** | ALWAYS create |
-| **>15** | Create AGENTS.md |
+| **>15** | Create AGENTS.md + CLAUDE.md bridge |
 | **8-15** | Create if distinct domain |
 | **<8** | Skip (parent covers) |
 
@@ -181,13 +181,13 @@ AGENTS_LOCATIONS = [
 
 ---
 
-## Phase 3: Generate AGENTS.md
+## Phase 3: Generate Rule Pairs
 
 **Mark "generate" as in_progress.**
 
 <critical>
-**File Writing Rule**: If AGENTS.md already exists at the target path → use \`Edit\` tool. If it does NOT exist → use \`Write\` tool.
-NEVER use Write to overwrite an existing file. ALWAYS check existence first via \`Read\` or discovery results.
+**File Writing Rule**: If a target file already exists → use \`Edit\` tool. If it does NOT exist → use \`Write\` tool.
+NEVER use Write to overwrite an existing file. ALWAYS check both AGENTS.md and CLAUDE.md first via \`Read\` or discovery results.
 </critical>
 
 ### Root AGENTS.md (Full Treatment)
@@ -239,18 +239,24 @@ NEVER use Write to overwrite an existing file. ALWAYS check existence first via 
 
 **Quality gates**: 50-150 lines, no generic advice, no obvious info.
 
-### Subdirectory AGENTS.md (Parallel)
+After writing AGENTS.md, create or update its sibling CLAUDE.md:
+- First line MUST be exactly \`@AGENTS.md\`
+- Preserve Claude-specific guidance below that import when it already exists
+- Never duplicate canonical project rules in CLAUDE.md
+
+### Subdirectory Rule Pairs (Parallel)
 
 Launch writing tasks for each location:
 
 \`\`\`
 for loc in AGENTS_LOCATIONS (except root):
-  task(category="writing", load_skills=[], run_in_background=false, description="Generate AGENTS.md", prompt=\\\`
-    Generate AGENTS.md for: \${loc.path}
+  task(category="writing", load_skills=[], run_in_background=false, description="Generate scoped rule pair", prompt=\\\`
+    Generate AGENTS.md and its sibling CLAUDE.md bridge for: \${loc.path}
     - Reason: \${loc.reason}
     - 30-80 lines max
     - NEVER repeat parent content
     - Sections: OVERVIEW (1 line), STRUCTURE (if >5 subdirs), WHERE TO LOOK, CONVENTIONS (if different), ANTI-PATTERNS
+    - CLAUDE.md first line MUST be exactly @AGENTS.md; preserve any Claude-specific guidance below it
   \\\`)
 \`\`\`
 
@@ -267,6 +273,8 @@ For each generated file:
 - Remove parent duplicates
 - Trim to size limits
 - Verify telegraphic style
+- Verify every AGENTS.md has a sibling CLAUDE.md
+- Verify every CLAUDE.md starts with exactly \`@AGENTS.md\`
 
 **Mark "review" as completed.**
 
@@ -281,15 +289,17 @@ Mode: {update | create-new}
 
 Files:
   [OK] ./AGENTS.md (root, {N} lines)
+  [OK] ./CLAUDE.md (bridge)
   [OK] ./src/hooks/AGENTS.md ({N} lines)
+  [OK] ./src/hooks/CLAUDE.md (bridge)
 
 Dirs Analyzed: {N}
-AGENTS.md Created: {N}
-AGENTS.md Updated: {N}
+Rule Pairs Created: {N}
+Rule Pairs Updated: {N}
 
 Hierarchy:
-  ./AGENTS.md
-  └── src/hooks/AGENTS.md
+  ./AGENTS.md + ./CLAUDE.md
+  └── src/hooks/AGENTS.md + ./src/hooks/CLAUDE.md
 \`\`\`
 
 ---
@@ -300,6 +310,7 @@ Hierarchy:
 - **Sequential execution**: MUST parallel (explore + LSP concurrent)
 - **Ignoring existing**: ALWAYS read existing first, even with --create-new
 - **Over-documenting**: Not every dir needs AGENTS.md
+- **Unpaired scoped rules**: Every AGENTS.md requires a sibling CLAUDE.md bridge
 - **Redundancy**: Child never repeats parent
 - **Generic content**: Remove anything that applies to ALL projects
 - **Verbose style**: Telegraphic or die`
