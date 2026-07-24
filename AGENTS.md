@@ -59,6 +59,7 @@ tasks, and Claude Code compatibility.
 | `src/mcp/` | Built-in MCP definitions | `src/mcp/AGENTS.md` |
 | `script/` | Schema, release, binary, and test automation | this file |
 | `packages/` | Platform-specific binary packages | this file |
+| `ASSETS.md` | Fork package and Ultra Research adoption contract | this file |
 
 Plugin initialization is composed through `src/index.ts`,
 `src/create-managers.ts`, `src/create-tools.ts`, `src/create-hooks.ts`, and
