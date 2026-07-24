@@ -54,6 +54,7 @@ logic in focused modules behind those composition boundaries.
 | Schema/build/release utilities | `script/`, `assets/` | tests beside scripts; publishing stays in CI |
 | Platform launcher packages | `packages/`, `bin/` | keep platform metadata and build script aligned |
 | Repository-local commands, skills, rules | `.opencode/`, `.sisyphus/` | preserve frontmatter and scoped behavior |
+| Reusable package contracts | `ASSETS.md` | plugin, CLI, schema, and binary adoption boundary |
 
 ## Cross-boundary change contracts
 
