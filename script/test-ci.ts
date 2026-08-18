@@ -18,6 +18,7 @@ export const ISOLATED_TEST_TARGETS = [
   "src/hooks/anthropic-context-window-limit-recovery/summarize-retry-strategy.test.ts",
   "src/hooks/auto-update-checker/checker/pinned-version-updater.test.ts",
   "src/hooks/auto-update-checker/checker/plugin-entry.test.ts",
+  "src/hooks/read-image-resizer/hook.test.ts",
   "src/plugin/event.model-fallback.test.ts",
 ] as const
 

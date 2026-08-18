@@ -1,0 +1,16 @@
+project: oh-my-opencode
+status: active
+focus: Keep the Ultra Research fork reproducible while reconciling upstream changes.
+updated: 2026-08-18
+tasks:
+  - id: isolate-read-image-resizer-hook-test
+    title: Isolate the read image resizer hook test from Bun's shared mock state
+    priority: P0
+    status: done
+    source: agent:codex
+  - id: reconcile-upstream-dev-history
+    title: Port the Ultra Research fork onto the current upstream dev history without rewriting published fork history
+    priority: P1
+    status: todo
+    source: agent:codex
+    note: The local fork dev branch is hundreds of commits behind upstream and must be reconciled as a dedicated integration task.
