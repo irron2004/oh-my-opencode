@@ -52,6 +52,12 @@ describe("install CLI - binary check behavior", () => {
     // given OpenCode binary is NOT installed
     isOpenCodeInstalledSpy = spyOn(configManager, "isOpenCodeInstalled").mockResolvedValue(false)
     getOpenCodeVersionSpy = spyOn(configManager, "getOpenCodeVersion").mockResolvedValue(null)
+    globalThis.fetch = mock(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ latest: "3.0.0" }),
+      } as Response)
+    ) as unknown as typeof fetch
 
     const args: InstallArgs = {
       tui: false,

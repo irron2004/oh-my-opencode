@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from "bun:te
 import { SkillMcpManager } from "./manager"
 import type { SkillMcpClientInfo, SkillMcpServerContext } from "./types"
 import type { ClaudeCodeMcpServer } from "../claude-code-mcp-loader/types"
+import { McpOAuthProvider } from "../mcp-oauth/provider"
 
 // Mock the MCP SDK transports to avoid network calls
 const mockHttpConnect = mock(() => Promise.reject(new Error("Mocked HTTP connection failure")))
@@ -25,18 +26,6 @@ mock.module("@modelcontextprotocol/sdk/client/streamableHttp.js", () => ({
 const mockTokens = mock(() => null as { accessToken: string; refreshToken?: string; expiresAt?: number } | null)
 const mockLogin = mock(() => Promise.resolve({ accessToken: "new-token" }))
 
-mock.module("../mcp-oauth/provider", () => ({
-  McpOAuthProvider: class MockMcpOAuthProvider {
-    constructor(public options: { serverUrl: string; clientId?: string; scopes?: string[] }) {}
-    tokens() {
-      return mockTokens()
-    }
-    async login() {
-      return mockLogin()
-    }
-  },
-}))
-
 
 
 
@@ -57,10 +46,15 @@ describe("SkillMcpManager", () => {
     manager = new SkillMcpManager()
     mockHttpConnect.mockClear()
     mockHttpClose.mockClear()
+    mockTokens.mockClear()
+    mockLogin.mockClear()
+    spyOn(McpOAuthProvider.prototype as never, "tokens" as never).mockImplementation(() => mockTokens() as never)
+    spyOn(McpOAuthProvider.prototype as never, "login" as never).mockImplementation(() => mockLogin() as never)
   })
 
   afterEach(async () => {
     await manager.disconnectAll()
+    mock.restore()
   })
 
   describe("getOrCreateClient", () => {

@@ -38,6 +38,13 @@ mock.module("../../shared/opencode-storage-paths", () => ({
   SESSION_STORAGE: TEST_SESSION_STORAGE,
 }))
 
+mock.module("../../shared/opencode-message-dir", () => ({
+  getMessageDir: (sessionID: string) => {
+    const direct = join(TEST_MESSAGE_STORAGE, sessionID)
+    return existsSync(direct) ? direct : null
+  },
+}))
+
 const { getAllSessions, getMessageDir, sessionExists, readSessionMessages, readSessionTodos, getSessionInfo } =
   await import("./storage")
 

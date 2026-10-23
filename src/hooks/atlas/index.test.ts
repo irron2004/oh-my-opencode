@@ -89,6 +89,7 @@ describe("atlas hook", () => {
     if (existsSync(TEST_DIR)) {
       rmSync(TEST_DIR, { recursive: true, force: true })
     }
+    mock.restore()
   })
 
   describe("tool.execute.after handler", () => {

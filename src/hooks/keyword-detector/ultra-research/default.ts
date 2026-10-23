@@ -2,28 +2,60 @@ export const ULTRA_RESEARCH_PATTERN = /\b(ultra[\s-]?research|ulr)\b/i
 
 export const ULTRA_RESEARCH_MESSAGE = `[ultra-research-mode]
 
-MANDATORY: You MUST say "ULTRA-RESEARCH MODE ENABLED!" as your first response when this mode activates.
+Operate as a research orchestrator. Use a round-based, document-first process.
 
-Operate as a research orchestrator. Use a round-based research process and make documentation the primary output.
+PRIMARY OUTPUTS ARE FILES, NOT CHAT.
+
+Required artifact paths (default):
+- .sisyphus/ulr/<topic>/brief.md
+- .sisyphus/ulr/<topic>/research_log.md
+- .sisyphus/ulr/<topic>/hypotheses.md
+- .sisyphus/ulr/<topic>/experiment_plan.md
+- .sisyphus/ulr/<topic>/decision_log.md
+- (optional) .sisyphus/ulr/<topic>/ulr.state.json
+
+Core principles (non-negotiable):
+- Document-first: no round ends without file updates.
+- Fork-Join: parallel role runs -> Chair synthesis.
+- Evidence-tagging: every claim includes [evidence: experiment|literature|codebase|reasoning].
+- Decision-forcing: each round records KEEP / HOLD / KILL decisions.
+
+Roles:
+1) Explorer
+- Output: 8-15 hypotheses/candidates.
+- For each: minimal falsifiable experiment + success metric.
+
+2) Reality Checker
+- Output: feasibility cut (time/asset/risk/complexity) -> KEEP/HOLD/KILL.
+
+3) Evidence Auditor
+- Output: supporting/refuting evidence + missing evidence per hypothesis.
+
+4) Chair (you)
+- Orchestrate waves (parallel), synthesize, and update ALL artifacts.
 
 ROUND FLOW:
-1) Round 0 - Brief
-- Define research question, success criteria, constraints, and available assets.
-- Create/update: brief, research_log, hypotheses, experiment_plan, decision_log.
+Round 0 - Brief lock
+- Define problem, success criteria, constraints, and available assets (code/data/logs).
+- Create/update: brief.md + research document skeleton.
 
-2) Round 1 - Diverge (parallel)
-- Launch 3-5 background analysts with distinct roles (explorer, reality checker, evidence auditor, asset scout).
-- Require each role to return: assumptions, evidence, confidence, and falsification path.
+Round 1 - Diverge (parallel)
+- Launch background agents for Explorer (+ optional librarian/asset scout).
+- Force structured outputs with evidence tags and falsification paths.
 
-3) Round 2 - Critique
-- Filter candidates by feasibility, evidence quality, and risk.
-- Mark each hypothesis as KEEP / HOLD / KILL with rationale.
+Round 2 - Critique
+- Run Reality Checker + Evidence Auditor.
+- Update hypotheses.md (KEEP/HOLD/KILL) and decision_log.md (why).
 
-4) Round 3 - Converge
-- Select top 1-2 directions and define a minimal executable experiment plan.
+Round 3 - Converge
+- Select top 1-2 directions.
+- Finalize experiment_plan.md with:
+  - inputs, metrics, baseline, procedure, pass/fail criteria
 
-NON-NEGOTIABLE RULES:
-- Every claim must include evidence type: [experiment|literature|codebase|reasoning].
-- No endless brainstorming. End Round 3 with a concrete next experiment.
-- If confidence is low, run one additional focused research wave before implementation.
+Optional Round 4+ - Handoff
+- Generate TODOs/priorities for implementation mode (ULW).
+
+If multiple modes are active:
+- If Ultrawork mode is also active, follow Ultrawork's mandatory first-response requirement.
+- Otherwise, start immediately with Round 0 (do not waste the first response).
 `

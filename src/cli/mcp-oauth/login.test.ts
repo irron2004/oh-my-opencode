@@ -1,25 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach, mock } from "bun:test"
+import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from "bun:test"
+import { McpOAuthProvider } from "../../features/mcp-oauth/provider"
 
 const mockLogin = mock(() => Promise.resolve({ accessToken: "test-token", expiresAt: 1710000000 }))
-
-mock.module("../../features/mcp-oauth/provider", () => ({
-  McpOAuthProvider: class MockMcpOAuthProvider {
-    constructor(public options: { serverUrl: string; clientId?: string; scopes?: string[] }) {}
-    async login() {
-      return mockLogin()
-    }
-  },
-}))
 
 const { login } = await import("./login")
 
 describe("login command", () => {
   beforeEach(() => {
     mockLogin.mockClear()
+    mock.restore()
+    mockLogin.mockImplementation(() => Promise.resolve({ accessToken: "test-token", expiresAt: 1710000000 }))
+    spyOn(McpOAuthProvider.prototype as never, "login" as never).mockImplementation(() => mockLogin() as never)
   })
 
   afterEach(() => {
-    // cleanup
+    mock.restore()
   })
 
   it("returns error code when server-url is not provided", async () => {

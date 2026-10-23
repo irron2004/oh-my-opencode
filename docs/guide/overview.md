@@ -66,6 +66,14 @@ For complex or critical tasks, press **Tab** to switch to Prometheus (Planner) m
 - Complex refactoring spanning many files
 - When you want a documented decision trail
 
+### Option 3: Ultra Research (For Document-First Research)
+
+Use ULR when you want multi-angle research to converge into a reproducible experiment plan.
+
+- Keyword: include `ulr` or `ultra-research` in your prompt
+- Command: `/ulr <topic-or-problem>`
+- Docs: [Ultra Research (ULR)](../ultra-research.md)
+
 ---
 
 ## Critical Usage Guidelines
@@ -166,3 +174,4 @@ For detailed configuration options including per-agent settings, category custom
 - [Installation Guide](./installation.md) - Detailed installation instructions
 - [Configuration Guide](../configurations.md) - Customize agents, models, and behaviors
 - [Features Reference](../features.md) - Complete feature documentation
+- [Ultra Research (ULR)](../ultra-research.md) - Document-first research workflow

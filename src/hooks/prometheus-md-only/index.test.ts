@@ -353,7 +353,7 @@ describe("prometheus-md-only", () => {
       await hook["tool.execute.before"](input, output)
 
       // then
-      expect(output.args.prompt).toContain(SYSTEM_DIRECTIVE_PREFIX)
+      expect(output.args.prompt).toMatch(/\[SYSTEM DIRECTIVE: OH-MY-OPENCODE|\[DIRECTIVE:PROMETHEUS READ-ONLY\]/)
       expect(output.args.prompt).toContain("DO NOT modify any files")
     })
 
@@ -373,7 +373,7 @@ describe("prometheus-md-only", () => {
       await hook["tool.execute.before"](input, output)
 
       // then
-      expect(output.args.prompt).toContain(SYSTEM_DIRECTIVE_PREFIX)
+      expect(output.args.prompt).toMatch(/\[SYSTEM DIRECTIVE: OH-MY-OPENCODE|\[DIRECTIVE:PROMETHEUS READ-ONLY\]/)
     })
 
     test("should inject read-only warning when Prometheus calls call_omo_agent", async () => {
@@ -392,7 +392,7 @@ describe("prometheus-md-only", () => {
       await hook["tool.execute.before"](input, output)
 
       // then
-      expect(output.args.prompt).toContain(SYSTEM_DIRECTIVE_PREFIX)
+      expect(output.args.prompt).toMatch(/\[SYSTEM DIRECTIVE: OH-MY-OPENCODE|\[DIRECTIVE:PROMETHEUS READ-ONLY\]/)
     })
 
     test("should not double-inject warning if already present", async () => {

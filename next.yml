@@ -1,0 +1,16 @@
+project: oh_my_opencode_ulr
+status: active
+focus: Preserve reviewed local work and track remaining validation.
+updated: "2026-10-23"
+tasks:
+  - id: preserve-local-work-20261016
+    title: Preserve reviewed local changes in a repository-specific commit
+    priority: P2
+    status: done
+    source: agent:codex
+  - id: run-bun-validation-20261016
+    title: Run the canonical Bun check before integration
+    priority: P1
+    status: todo
+    source: agent:codex
+    note: "Bun and this checkout dependencies are unavailable in the current environment; the checkpoint does not certify the test or build gates."

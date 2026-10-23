@@ -6,6 +6,7 @@
 |------------|----------|-------------|
 | **Simple** | Just prompt | Simple tasks, quick fixes, single-file changes |
 | **Complex + Lazy** | Just type `ulw` or `ultrawork` | Complex tasks where explaining context is tedious. Agent figures it out. |
+| **Complex + Research** | Use `/ulr` (or include `ulr`) | Multi-angle research that must converge into a reproducible experiment plan (document-first). |
 | **Complex + Precise** | `@plan` → `/start-work` | Precise, multi-step work requiring true orchestration. Prometheus plans, Atlas executes. |
 
 **Decision Flow:**
@@ -345,6 +346,14 @@ Executes the generated plan.
 - **Fresh session**: Finds plan in `.sisyphus/plans/` and enters execution mode
 - **Existing boulder**: Resumes from where you left off (reads boulder.json)
 - **Effect**: Automatically switches to Atlas agent if not already active
+
+### `/ulr`
+
+Starts the Ultra Research (ULR) process.
+
+- Use when you want a round-based, document-first research workflow.
+- Outputs are written under `.sisyphus/ulr/<topic>/...`.
+- See: [Ultra Research (ULR)](./ultra-research.md)
 
 ### Switching Agents Manually
 

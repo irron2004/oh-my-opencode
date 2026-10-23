@@ -1,6 +1,7 @@
 import type { PluginInput } from "@opencode-ai/plugin"
 import { detectKeywordsWithType, extractPromptText } from "./detector"
 import { isPlannerAgent } from "./constants"
+import type { KeywordDetectorType } from "./constants"
 import { log } from "../../shared"
 import {
   isSystemDirective,
@@ -12,6 +13,31 @@ import {
   subagentSessions,
 } from "../../features/claude-code-session-state"
 import type { ContextCollector } from "../../features/context-injector"
+
+const MAX_TRACKED_SESSIONS = 500
+const injectedModesBySession = new Map<string, Set<KeywordDetectorType>>()
+
+export function _resetKeywordDetectorForTesting(): void {
+  injectedModesBySession.clear()
+}
+
+function getInjectedModes(sessionID: string): Set<KeywordDetectorType> {
+  const existing = injectedModesBySession.get(sessionID)
+  if (existing) {
+    return existing
+  }
+
+  if (injectedModesBySession.size >= MAX_TRACKED_SESSIONS) {
+    const oldestKey = injectedModesBySession.keys().next().value as string | undefined
+    if (oldestKey) {
+      injectedModesBySession.delete(oldestKey)
+    }
+  }
+
+  const set = new Set<KeywordDetectorType>()
+  injectedModesBySession.set(sessionID, set)
+  return set
+}
 
 export function createKeywordDetectorHook(ctx: PluginInput, _collector?: ContextCollector) {
   return {
@@ -38,6 +64,12 @@ export function createKeywordDetectorHook(ctx: PluginInput, _collector?: Context
 
       // Remove system-reminder content to prevent automated system messages from triggering mode keywords
       const cleanText = removeSystemReminders(promptText)
+
+      const isSlashCommandMessage = cleanText.trimStart().startsWith("/")
+      if (isSlashCommandMessage) {
+        return
+      }
+
       const modelID = input.model?.modelID
       let detectedKeywords = detectKeywordsWithType(cleanText, currentAgent, modelID)
 
@@ -72,7 +104,27 @@ export function createKeywordDetectorHook(ctx: PluginInput, _collector?: Context
 
       const hasUltrawork = detectedKeywords.some((k) => k.type === "ultrawork")
       const hasUltraResearch = detectedKeywords.some((k) => k.type === "ultra-research")
-      if (hasUltrawork) {
+
+      if (hasUltraResearch) {
+        detectedKeywords = detectedKeywords.filter((k) => k.type !== "search" && k.type !== "analyze")
+      }
+
+      const textPartIndex = output.parts.findIndex((p) => p.type === "text" && p.text !== undefined)
+      if (textPartIndex === -1) {
+        log(`[keyword-detector] No text part found, skipping injection`, { sessionID: input.sessionID })
+        return
+      }
+
+      const alreadyInjected = getInjectedModes(input.sessionID)
+      const toInject = detectedKeywords.filter((k) => !alreadyInjected.has(k.type))
+      if (toInject.length === 0) {
+        return
+      }
+
+      const injectUltrawork = toInject.some((k) => k.type === "ultrawork")
+      const injectUltraResearch = toInject.some((k) => k.type === "ultra-research")
+
+      if (injectUltrawork) {
         log(`[keyword-detector] Ultrawork mode activated`, { sessionID: input.sessionID })
 
         if (output.message.variant === undefined) {
@@ -96,7 +148,7 @@ export function createKeywordDetectorHook(ctx: PluginInput, _collector?: Context
           )
       }
 
-      if (hasUltraResearch) {
+      if (injectUltraResearch) {
         log(`[keyword-detector] Ultra research mode activated`, { sessionID: input.sessionID })
 
         if (output.message.variant === undefined) {
@@ -120,20 +172,18 @@ export function createKeywordDetectorHook(ctx: PluginInput, _collector?: Context
           )
       }
 
-      const textPartIndex = output.parts.findIndex((p) => p.type === "text" && p.text !== undefined)
-      if (textPartIndex === -1) {
-        log(`[keyword-detector] No text part found, skipping injection`, { sessionID: input.sessionID })
-        return
-      }
-
-      const allMessages = detectedKeywords.map((k) => k.message).join("\n\n")
+      const allMessages = toInject.map((k) => k.message).join("\n\n")
       const originalText = output.parts[textPartIndex].text ?? ""
 
       output.parts[textPartIndex].text = `${allMessages}\n\n---\n\n${originalText}`
 
-      log(`[keyword-detector] Detected ${detectedKeywords.length} keywords`, {
+      for (const k of toInject) {
+        alreadyInjected.add(k.type)
+      }
+
+      log(`[keyword-detector] Detected ${toInject.length} keywords`, {
         sessionID: input.sessionID,
-        types: detectedKeywords.map((k) => k.type),
+        types: toInject.map((k) => k.type),
       })
     },
   }

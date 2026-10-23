@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach, spyOn } from "bun:test"
-import { createKeywordDetectorHook } from "./index"
+import { createKeywordDetectorHook, _resetKeywordDetectorForTesting } from "./index"
 import { setMainSession, updateSessionAgent, clearSessionAgent, _resetForTesting } from "../../features/claude-code-session-state"
 import { ContextCollector } from "../../features/context-injector"
 import * as sharedModule from "../../shared"
@@ -12,6 +12,7 @@ describe("keyword-detector message transform", () => {
 
   beforeEach(() => {
     _resetForTesting()
+    _resetKeywordDetectorForTesting()
     logCalls = []
     logSpy = spyOn(sharedModule, "log").mockImplementation((msg: string, data?: unknown) => {
       logCalls.push({ msg, data })
@@ -22,6 +23,7 @@ describe("keyword-detector message transform", () => {
     logSpy?.mockRestore()
     getMainSessionSpy?.mockRestore()
     _resetForTesting()
+    _resetKeywordDetectorForTesting()
   })
 
   function createMockPluginInput(options: { toastCalls?: string[] } = {}) {
@@ -102,6 +104,92 @@ describe("keyword-detector message transform", () => {
     expect(toastCalls).toContain("Ultra Research Mode Activated")
   })
 
+  test("should not inject ultra research twice in same session (dedupe)", async () => {
+    const collector = new ContextCollector()
+    const sessionID = "ulr-dedupe-session"
+    getMainSessionSpy = spyOn(sessionState, "getMainSessionID").mockReturnValue(sessionID)
+    const toastCalls: string[] = []
+    const hook = createKeywordDetectorHook(createMockPluginInput({ toastCalls }), collector)
+
+    const first = {
+      message: {} as Record<string, unknown>,
+      parts: [{ type: "text", text: "ulr investigate model drift" }],
+    }
+
+    await hook["chat.message"]({ sessionID }, first)
+
+    const firstText = first.parts.find(p => p.type === "text")
+    expect(firstText).toBeDefined()
+    expect(firstText!.text).toContain("[ultra-research-mode]")
+    expect(toastCalls).toContain("Ultra Research Mode Activated")
+
+    const second = {
+      message: {} as Record<string, unknown>,
+      parts: [{ type: "text", text: "ulr investigate again" }],
+    }
+
+    await hook["chat.message"]({ sessionID }, second)
+
+    const secondText = second.parts.find(p => p.type === "text")
+    expect(secondText).toBeDefined()
+    expect(secondText!.text).toBe("ulr investigate again")
+    expect(toastCalls.filter(t => t === "Ultra Research Mode Activated").length).toBe(1)
+  })
+
+  test("should suppress search/analyze injections when ultra research is present (precedence)", async () => {
+    const collector = new ContextCollector()
+    const sessionID = "ulr-precedence-session"
+    getMainSessionSpy = spyOn(sessionState, "getMainSessionID").mockReturnValue(sessionID)
+    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const output = {
+      message: {} as Record<string, unknown>,
+      parts: [{ type: "text", text: "ulr search for the bug" }],
+    }
+
+    await hook["chat.message"]({ sessionID }, output)
+
+    const textPart = output.parts.find(p => p.type === "text")
+    expect(textPart).toBeDefined()
+    expect(textPart!.text).toContain("[ultra-research-mode]")
+    expect(textPart!.text).not.toContain("[search-mode]")
+    expect(textPart!.text).not.toContain("[analyze-mode]")
+  })
+
+  test("should skip keyword injection for slash command messages", async () => {
+    const collector = new ContextCollector()
+    const sessionID = "slash-command-session"
+    getMainSessionSpy = spyOn(sessionState, "getMainSessionID").mockReturnValue(sessionID)
+    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const output = {
+      message: {} as Record<string, unknown>,
+      parts: [{ type: "text", text: "/ulr investigate model drift" }],
+    }
+
+    await hook["chat.message"]({ sessionID }, output)
+
+    const textPart = output.parts.find(p => p.type === "text")
+    expect(textPart).toBeDefined()
+    expect(textPart!.text).toBe("/ulr investigate model drift")
+  })
+
+  test("should handle large inputs without failing keyword detection", async () => {
+    const collector = new ContextCollector()
+    const sessionID = "ulr-large-input-session"
+    getMainSessionSpy = spyOn(sessionState, "getMainSessionID").mockReturnValue(sessionID)
+    const hook = createKeywordDetectorHook(createMockPluginInput(), collector)
+    const largeTail = "x".repeat(200_000)
+    const output = {
+      message: {} as Record<string, unknown>,
+      parts: [{ type: "text", text: `ulr investigate model drift ${largeTail}` }],
+    }
+
+    await hook["chat.message"]({ sessionID }, output)
+
+    const textPart = output.parts.find(p => p.type === "text")
+    expect(textPart).toBeDefined()
+    expect(textPart!.text).toContain("[ultra-research-mode]")
+  })
+
   test("should NOT transform when no keywords detected", async () => {
     // given - no keywords in message
     const collector = new ContextCollector()
@@ -128,6 +216,7 @@ describe("keyword-detector session filtering", () => {
 
   beforeEach(() => {
     _resetForTesting()
+    _resetKeywordDetectorForTesting()
     logCalls = []
     logSpy = spyOn(sharedModule, "log").mockImplementation((msg: string, data?: unknown) => {
       logCalls.push({ msg, data })
@@ -137,6 +226,7 @@ describe("keyword-detector session filtering", () => {
   afterEach(() => {
     logSpy?.mockRestore()
     _resetForTesting()
+    _resetKeywordDetectorForTesting()
   })
 
   function createMockPluginInput(options: { toastCalls?: string[] } = {}) {
@@ -294,6 +384,7 @@ describe("keyword-detector word boundary", () => {
 
   beforeEach(() => {
     _resetForTesting()
+    _resetKeywordDetectorForTesting()
     logCalls = []
     logSpy = spyOn(sharedModule, "log").mockImplementation((msg: string, data?: unknown) => {
       logCalls.push({ msg, data })
@@ -303,6 +394,7 @@ describe("keyword-detector word boundary", () => {
   afterEach(() => {
     logSpy?.mockRestore()
     _resetForTesting()
+    _resetKeywordDetectorForTesting()
   })
 
   function createMockPluginInput(options: { toastCalls?: string[] } = {}) {
@@ -429,6 +521,7 @@ describe("keyword-detector system-reminder filtering", () => {
 
   beforeEach(() => {
     _resetForTesting()
+    _resetKeywordDetectorForTesting()
     logCalls = []
     logSpy = spyOn(sharedModule, "log").mockImplementation((msg: string, data?: unknown) => {
       logCalls.push({ msg, data })
@@ -438,6 +531,7 @@ describe("keyword-detector system-reminder filtering", () => {
   afterEach(() => {
     logSpy?.mockRestore()
     _resetForTesting()
+    _resetKeywordDetectorForTesting()
   })
 
   function createMockPluginInput() {
@@ -620,6 +714,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
 
   beforeEach(() => {
     _resetForTesting()
+    _resetKeywordDetectorForTesting()
     logCalls = []
     logSpy = spyOn(sharedModule, "log").mockImplementation((msg: string, data?: unknown) => {
       logCalls.push({ msg, data })
@@ -629,6 +724,7 @@ describe("keyword-detector agent-specific ultrawork messages", () => {
   afterEach(() => {
     logSpy?.mockRestore()
     _resetForTesting()
+    _resetKeywordDetectorForTesting()
   })
 
   function createMockPluginInput() {

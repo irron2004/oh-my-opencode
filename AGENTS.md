@@ -1,3 +1,5 @@
+> 공통 정책: 워크스페이스 루트 `../../../AGENTS.md`. 다음 할 일: `next.yml`
+
 # Repository Agent Guide
 
 > Workspace policy: when this checkout lives under ruahverce, read

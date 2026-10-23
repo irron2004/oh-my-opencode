@@ -6,6 +6,7 @@ import { STOP_CONTINUATION_TEMPLATE } from "./templates/stop-continuation"
 import { REFACTOR_TEMPLATE } from "./templates/refactor"
 import { START_WORK_TEMPLATE } from "./templates/start-work"
 import { HANDOFF_TEMPLATE } from "./templates/handoff"
+import { ULR_TEMPLATE } from "./templates/ulr"
 
 const BUILTIN_COMMAND_DEFINITIONS: Record<BuiltinCommandName, Omit<CommandDefinition, "name">> = {
   "init-deep": {
@@ -93,6 +94,18 @@ Timestamp: $TIMESTAMP
 $ARGUMENTS
 </user-request>`,
     argumentHint: "[goal]",
+  },
+
+  ulr: {
+    description: "(builtin) Start Ultra Research (ULR) document-first process",
+    template: `<command-instruction>
+${ULR_TEMPLATE}
+</command-instruction>
+
+<user-request>
+$ARGUMENTS
+</user-request>`,
+    argumentHint: "[topic-or-problem]",
   },
 }
 

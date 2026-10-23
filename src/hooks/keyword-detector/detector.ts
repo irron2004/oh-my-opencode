@@ -2,11 +2,19 @@ import {
   KEYWORD_DETECTORS,
   CODE_BLOCK_PATTERN,
   INLINE_CODE_PATTERN,
+  type KeywordDetectorType,
+  MAX_KEYWORD_DETECTION_CHARS,
 } from "./constants"
 
 export interface DetectedKeyword {
-  type: "ultrawork" | "search" | "ultra-research" | "analyze"
+  type: KeywordDetectorType
   message: string
+}
+
+function clampDetectionInput(text: string): string {
+  return text.length > MAX_KEYWORD_DETECTION_CHARS
+    ? text.slice(0, MAX_KEYWORD_DETECTION_CHARS)
+    : text
 }
 
 export function removeCodeBlocks(text: string): string {
@@ -25,20 +33,22 @@ function resolveMessage(
 }
 
 export function detectKeywords(text: string, agentName?: string, modelID?: string): string[] {
-  const textWithoutCode = removeCodeBlocks(text)
-  return KEYWORD_DETECTORS.filter(({ pattern }) =>
-    pattern.test(textWithoutCode)
-  ).map(({ message }) => resolveMessage(message, agentName, modelID))
+  const clamped = clampDetectionInput(text)
+  const textWithoutCode = removeCodeBlocks(clamped)
+  return KEYWORD_DETECTORS
+    .filter(({ pattern }) => pattern.test(textWithoutCode))
+    .map(({ message }) => resolveMessage(message, agentName, modelID))
 }
 
 export function detectKeywordsWithType(text: string, agentName?: string, modelID?: string): DetectedKeyword[] {
-  const textWithoutCode = removeCodeBlocks(text)
-  const types: Array<"ultrawork" | "search" | "ultra-research" | "analyze"> = ["ultrawork", "search", "ultra-research", "analyze"]
-  return KEYWORD_DETECTORS.map(({ pattern, message }, index) => ({
-    matches: pattern.test(textWithoutCode),
-    type: types[index],
-    message: resolveMessage(message, agentName, modelID),
-  }))
+  const clamped = clampDetectionInput(text)
+  const textWithoutCode = removeCodeBlocks(clamped)
+  return KEYWORD_DETECTORS
+    .map(({ type, pattern, message }) => ({
+      matches: pattern.test(textWithoutCode),
+      type,
+      message: resolveMessage(message, agentName, modelID),
+    }))
     .filter((result) => result.matches)
     .map(({ type, message }) => ({ type, message }))
 }
